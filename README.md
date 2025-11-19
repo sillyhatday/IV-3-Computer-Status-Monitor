@@ -1,41 +1,61 @@
-# External-CPU-Display-7-Segment
-An External CPU indicator display - Set up for a 2 digit display - Expandable to VFD tube display
+INSERT DECENT PHOTO
 
-![VFD Prototype Finished](https://user-images.githubusercontent.com/65309612/81950835-5ba41a80-95fc-11ea-8356-6accc7733a6d.jpg)
+## Preface
 
-https://youtu.be/o73YW68mrRY
+This project is long overdue an update. I avoided doing anything with it due to me not being happy with it. That was due to lack of experience in electronics and coding. I've archived the original readme as I find it interesting how my ideas and troubleshooting has changed in that time. There is a lot of wrong information in it. I do not doubt that this will also contain errors. I just hope there will be less of them.
 
-This took me far longer than I want to admit. The electronic side took no time to sort out, the lack of coding knowledge took me around the houses. Trying to get other peoples code adapted to work for my application. Lets talk through it, with various options to get an end result.
+# IV-3 VFD Status Monitor
 
-I wanted to use some retro IV-3 VFD tubes to display computers CPU usage in percentage. This was after many other ideas. My first idea to get this to work was with display multiplexing. The standard arduino doesn't have enough I/O for driving 7 display segments x2 plus one for each digit to be controlled on or off. Multiplexing is nothing new, there is enough out there to explain how it works if you do not know.
+A computer status monitor using vacuum tube displays from the Soviet Union. Small IV-3 tubes.
 
-You will need some 74HC595 shift registers and for VFD tubes a UDN2981, per tube. You can use any 8 channel source driver you like, so long as it isolates the high voltage away from the Arduino and is designed for the high voltage.
+<img width="100" height="161" alt="IV-3" src="https://github.com/user-attachments/assets/f9184b12-17df-46d5-9dc5-7c579cb3c8fe" />
 
-I borrowed the PC software side from here: https://github.com/Maciekbac/Arduino-LED-CPU-Monitor
-Credit to Maciekbac for that.
+This was originally designed as a CPU usage monitor, it has been used by me for 6 years as such. It relied on someone else's Windows based software to provide a data stream to the Arduino. Since then, with the development of AI, I've been able to get GPU usage to be transferred over serial also. I've picked up AVR programming again determined to get a handle on C/C++. I'll get to making my own computer side software in time.
 
-Schematic: not finished - missing heater power source!
-![CPU Monitor Schem](https://user-images.githubusercontent.com/65309612/81947803-df5c0800-95f8-11ea-93c5-d733ee2ebe9a.png)
+This works by taking data over serial from a PC and bit banging it out into two shift registers. These registers then control a high side switching driver IC, to control the 28v required by the VFD segments.
 
+The VFD displays require two voltages to operate, while the logic requires just 5v. I wanted only one supply that could power everything, so a boost circuit was used. The chip at the time I chose was a MC34063 due to its availability and helpful information online.
 
-# Option 1.
+The 5v logic supply would come directly from the USB port supply. The 28v for the VFD anode voltage would come from the boost converter. The remaining 1v come from a simple resistor dropper. This is one aspect I'm unhappy with. A dedicated buck supply would be much better for display stability. This is one of the issues I'm unhappy with that is compounded by other things. I'll get to that later on.
 
-This is not the best soultion, you're best skipping to the next one.
+The driver IC was the trickiest part to find. Any such devices now are surface mounted and at the time I was trying to stick with THT parts. The UDN2981A is still available used/NOS as of this update. If parts dry up, I might update the project with a ULN2803 and the extra transistor needed as these are available new.
 
-This option worked in a fashion. While the Arduino is busy multiplexing the displays, it doesn't have time to run any other code. Well not a lot of code anyhow. This is ok and it does work properly. I found that it refreshes the display too fast making it tough to read, not only that but with the PC software, the CPU readings are up and down all the time. As such the display can totally miss spikes in CPU performance. I realised that readings in monitoring software is averaged out over time. The problems start when writing some code to average a bunch of readings from the serial port. While the Arduino is busy doing that, it's not longer multiplexing and the display freezes on what ever it was just doing. Leaving just one digit on. Once it has done its calculations it gets back to showing the display properly. This gives a much more stable reading that is much more useful. Juist with a horrid flickering display.
+The use of two shift registers was me thinking it would be better than using 14 outputs to drive the displays. In hind sight, that would have been easier for me then. I learned about shift registers though, so maybe it was worth it.
 
-I do wonder if someone more experienced can write some more efficient code to allow this to work properly, which is why I included this in here. Possibly editing the PC software to do the work before being sent to the arduino. (I don't know how to do that)
+## Computer Software
 
-# Option 2.
+At the time of doing this project, I relied on having someone else to do the computer side of things. I didn't get someone to do it, just had to make do with what could be found online.
 
-After that I realised that I'd be able to use shift registers to solve the issue. If the hardware you have can't do the job, add more hardware. Simply the shift registers do all the work in the displays, the arduino spends its time reading the serial port and calculating averages. Another bonus is that you can have longer periods of time to take an average. Making a really nice stable display. Downside is that you need more hardware to make it all work.
+Since the time of this project, I've moved to Linux from Windows. I don't want to use the AI privacy mess of Windows 11. I can't complain about AI too much as that was the solution to coming up with different PC side software. After moving to Linux, the software I was using, wouldn't work.
 
-Included is the schematic for making your own PCB. I have yet to make my own PCB and haven't sorted out a constant current source for driving the VFD heaters. For testing I've been connecting the heaters in series with a 100ohm resistor on 5v. You can use a 120ohm resistor too so you can underdrive the tubes. I've been testing with 1/4 watt resistors that work but run very hot, I'd go for 1/2 watt or 1 watt in the long term. This will help to make them last longer, as they will loose their brightness over time.
+There is now a shell and Python script. The idea being that the Python script could be used in Windows, or tweaked to be. Windows uses a different way to get status data than Linux. I'll see if I can modify it myself to work. I'd like to be able to code these things myself, so I got to learn.
 
-The Arduino sketch has inverted hex values to be able to drive either, a common anode or common cathode LED seven segment display. For driving the VFD tubes you need to use the common cathode hex values.
+There is no limit to what you can display on it, if it can be viewed on a two digit display. I'd like to see about having it cycle through different data with some sort of indicator in between. CU = CPU%, GU = GPU%, Cc = CPU Celsius, Gc = GPU Celsius, etc.
 
-Running the segments and the grid requires a 'high' voltage. Arduino outputs are fine for driving a LED display, the VFD tubes require a higher driving voltage. Anoyingly, you can just bearly get them to run on only 5v but it is not very useful, they are so dim. I found that the datasheet for the tubes say to drive them around 24v. They will be nice and bright but wear out much faster. I personally like them running between 8.5v and 12v, they look just fine.
+For now the scripts provided here work only on Linux, they are for CPU and GPU usage %. They are the two I find most useful.
 
-For testing I've been using a prebuilt boost convertor to only need a single 5v supply input. Which is got from the USB that needs plugging in for the serial data.
+The original software for Windows can be found here: https://github.com/Maciekbac/Arduino-LED-CPU-Monitor
 
-With only needing now 3 Arduino I/O pins you can use a really small Arduino to tidy things up. 
+## Issues
+
+* There is a diode on the Arduino Nano that is to stop external voltages being fed back through the USB connector. I didn't even realise until recently. That poor thing has to deal with large current spikes. It's been years of use and it hasn't failed, so it must be fine. The issue is the voltage drop across it. The boost supply was designed for 5v input, not 4.5v. As a result the output voltage of the boost supply isn't stable (one of the reasons for this anyway). 
+
+* The Arduino used has a USB micro connector. Touching it changes the display brightness. A more modern Arduino with a USB C connector would provide a better connection.
+
+* The major reason for the supply output wondering up and down with load, is due to the original design not having any supply filtering. Using my small scope, you can see the voltage at the USB port dropping to 3v each time the boost converter switches. I forget the switching frequency now, I think it was 80KHz. After some testing, a 470uF capacitor on the Arduino supply pins ironed out those 3v dips, keeping the voltage close to 4.5v. This needs adding to the design.
+
+* Major reason number two. The inductor for the boost supply was tiny. I'd noticed this right away and botched on a larger inductor. This helped a lot. It was still undersized. More recently I swapped for a much larger inductor that nearly fits perfectly. Originally I'd not taken into account the saturation current of the inductor.
+
+* The boost supply didn't have enough output filtering. Unsure as to why I got it wrong. 100uF works well.
+
+* Yet another reason for the display brightness issues, the basic resistor dropper used for the cathodes. Any variation in the supply voltage would vary the cathode voltage, not even counting for the fact it was designed for 5v not 4.5v. As mentioned, there are many issues with supply voltage. Both anode and cathode voltages changing causes larger brightness changes than only one changing. A proper onboard buck supply would solve this.
+
+* On the software side of things. The Windows program I used sent data so fast you could bearly read the display. That was solved by using 5 data points and averaging them in the Arduino. The data stream needs to be fast else the Arduino will sample a zero and the display hops between 0, x value, 0, y value. Need to add code to tell the Arduino to not sample no data from the serial connection.
+
+## Future Ideas
+
+* Having made this using only 3 IO pins plus 2 for the serial connection. Can a version of the ATtiny be used? ATtiny85, ATtiny44, ATtiny45, Attiny2313 with FTDI chip?
+
+* At the time I made a choice to drive both displays all of the time, rather than a multiplexed display. This was due to me never programming anything before in my life, except for ladder logic in college. I was able to get a multiplex function working but it would freeze every update. Future me knows now this was due to the delay() used, blocking anything else running. It is not in fact that the Arduino isn't powerful enough. Sounds dumb looking back.
+
+* Multiplexing would be nice as is would reduce the current on the USB port.
