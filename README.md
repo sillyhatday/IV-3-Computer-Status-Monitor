@@ -22,6 +22,25 @@ The driver IC was the trickiest part to find. Any such devices now are surface m
 
 The use of two shift registers was me thinking it would be better than using 14 outputs to drive the displays. In hind sight, that would have been easier for me then. I learned about shift registers though, so maybe it was worth it.
 
+## Parts List
+
+| Part No. | Qty | Reference |
+| -------- | --- | --------- |
+| Arduino Nano 168/328 | 1 | A1 |
+| Capacitor 68uF | 1 | C1 |
+| Capacitor 330pF | 1 | C2 |
+| Diode 1N5819 | 1 | D1 |
+| Inductor 33uH | 1 | L1 |
+| Resistor 110K | 1 | R1 |
+| Resistor 10K | 1 | R2 |
+| Resistor 180R | 1 | R3 |
+| Resistor 0R39 | 1 | R4 |
+| Resistor 120R | 2 | R5, R6 |
+| VFD IV-3 | 2 | TUBE1, TUBE2 |
+| MC34063 | 1 | U1 |
+| 74HC595 | 2 | U2, U3 |
+| UDN2981 | 2 | U4, U5 |
+
 ## Computer Software
 
 At the time of doing this project, I relied on having someone else to do the computer side of things. I didn't get someone to do it, just had to make do with what could be found online.
